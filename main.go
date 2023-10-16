@@ -5,30 +5,50 @@ import (
 	"html/template"
 	"log"
 	"net/http"
-	"os"
+
+	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi/v5/middleware"
 )
 
-//go:embed templates/*
-var resources embed.FS
+//go:embed templates
+var templates embed.FS
 
-var t = template.Must(template.ParseFS(resources, "templates/*"))
+//go:embed static
+var static embed.FS
+
+var t = template.Must(template.ParseFS(templates, "templates/*"))
+
+type Todo struct {
+	Title string
+	note  string
+}
 
 func main() {
-	port := os.Getenv("PORT")
+	r := chi.NewRouter()
+	r.Use(middleware.Logger)
 
-	if port == "" {
-		port = "8080"
+	fs := http.FileServer(http.FS(static))
+
+	r.Get("/favicon.ico", serveFavIcon)
+	r.Handle("/static/*", fs)
+
+	r.Get("/", getHome)
+
+	log.Println("listening on :4000")
+	http.ListenAndServe(":4000", r)
+}
+
+func serveFavIcon(w http.ResponseWriter, r *http.Request) {
+	http.ServeFile(w, r, "static/favicon.ico")
+}
+
+func getHome(w http.ResponseWriter, r *http.Request) {
+	todos := []Todo{
+		{Title: "hello world", note: "first todo"},
+		{Title: "another todo"},
+		{Title: "making a list", note: "yes"},
 	}
 
-	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		data := map[string]string{
-			"Hello": "world",
-		}
-
-		t.ExecuteTemplate(w, "index.html.tmpl", data)
-
-	})
-
-	log.Println("listening on", port)
-	log.Fatal(http.ListenAndServe(":"+port, nil))
+	//t.ExecuteTemplate(w, "index.html.tmpl", make(map[string]string))
+	t.ExecuteTemplate(w, "index.html.tmpl", todos)
 }

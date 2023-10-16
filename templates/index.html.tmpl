@@ -1,10 +1,19 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head> </head>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="/static/app.css" type="text/css" />
+  </head>
   <body>
-    <h1>Hello from Fly</h1>
-    {{ if .Hello }}
-    <h2>Hello {{.Hello}} XXX</h2>
-    {{ end }}
+    <h1 class="text-red-500">Todo List</h1>
+    <ul>
+      {{range .}}
+      <li>{{.Title}}</li>
+      <hr />
+      {{
+        end
+      }}
+    </ul>
   </body>
 </html>
