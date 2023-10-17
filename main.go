@@ -1,10 +1,17 @@
 package main
 
 import (
+	"context"
 	"embed"
 	"html/template"
 	"log"
 	"net/http"
+
+	webby "example.com/webby/sql"
+
+	"database/sql"
+
+	_ "github.com/lib/pq"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
@@ -18,37 +25,62 @@ var static embed.FS
 
 var t = template.Must(template.ParseFS(templates, "templates/*"))
 
-type Todo struct {
-	Title string
-	note  string
+func run() error {
+	ctx := context.Background()
+
+	db, err := sql.Open("postgres", "host=/run/postgresql dbname=webby")
+	if err != nil {
+		return err
+	}
+	queries := webby.New(db)
+
+	properties, err := queries.ListProperties(ctx)
+	if err != nil {
+		return err
+	}
+	log.Print(properties)
+
+	// inserted, err := queries.CreateProperty(ctx, gofakeit.Company())
+	// if err != nil {
+	// 	return err
+	// }
+	// log.Print(inserted)
+
+	// fetched, err := queries.GetProperty(ctx, inserted.ID)
+	// if err != nil {
+	// 	return err
+	// }
+	// log.Println(reflect.DeepEqual(inserted, fetched))
+	return nil
 }
 
 func main() {
+	if err := run(); err != nil {
+		log.Fatal(err)
+	}
+
 	r := chi.NewRouter()
-	r.Use(middleware.Logger)
 
-	fs := http.FileServer(http.FS(static))
-
-	r.Get("/favicon.ico", serveFavIcon)
-	r.Handle("/static/*", fs)
-
-	r.Get("/", getHome)
+	definemiscellaneousRoutes(r)
+	defineAppRoutes(r)
 
 	log.Println("listening on :4000")
 	http.ListenAndServe(":4000", r)
 }
 
-func serveFavIcon(w http.ResponseWriter, r *http.Request) {
-	http.ServeFile(w, r, "static/favicon.ico")
+func defineAppRoutes(r *chi.Mux) {
+	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
+
+		t.ExecuteTemplate(w, "index.html.tmpl", [0]string{})
+	})
+
 }
 
-func getHome(w http.ResponseWriter, r *http.Request) {
-	todos := []Todo{
-		{Title: "hello world", note: "first todo"},
-		{Title: "another todo"},
-		{Title: "making a list", note: "yes"},
-	}
-
-	//t.ExecuteTemplate(w, "index.html.tmpl", make(map[string]string))
-	t.ExecuteTemplate(w, "index.html.tmpl", todos)
+func definemiscellaneousRoutes(r *chi.Mux) {
+	r.Use(middleware.Logger)
+	fs := http.FileServer(http.FS(static))
+	r.Get("/favicon.ico", func(w http.ResponseWriter, r *http.Request) {
+		http.ServeFile(w, r, "static/favicon.ico")
+	})
+	r.Handle("/static/*", fs)
 }

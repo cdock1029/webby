@@ -9,7 +9,12 @@
     <h1 class="text-red-500">Todo List</h1>
     <ul>
       {{range .}}
-      <li>{{.Title}}</li>
+      <li>
+        <div>
+          {{.Title}}
+        </div>
+        <div>{{.Note}}</div>
+      </li>
       <hr />
       {{
         end
