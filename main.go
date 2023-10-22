@@ -1,13 +1,13 @@
 package main
 
 import (
-	"context"
 	"embed"
 	"html/template"
 	"log"
 	"net/http"
+	"strconv"
 
-	webby "example.com/webby/sql"
+	webbyDb "github.com/cdock1029/webby/db"
 
 	"database/sql"
 
@@ -17,7 +17,7 @@ import (
 	"github.com/go-chi/chi/v5/middleware"
 )
 
-//go:embed templates
+//go:embed templates/*
 var templates embed.FS
 
 //go:embed static
@@ -25,43 +25,26 @@ var static embed.FS
 
 var t = template.Must(template.ParseFS(templates, "templates/*"))
 
-func run() error {
-	ctx := context.Background()
+var repo *webbyDb.Queries
 
-	db, err := sql.Open("postgres", "host=/run/postgresql dbname=webby")
+func setupDb() error {
+	sqlDb, err := sql.Open("postgres", "host=/run/postgresql dbname=webby")
 	if err != nil {
 		return err
 	}
-	queries := webby.New(db)
-
-	properties, err := queries.ListProperties(ctx)
-	if err != nil {
-		return err
-	}
-	log.Print(properties)
-
-	// inserted, err := queries.CreateProperty(ctx, gofakeit.Company())
-	// if err != nil {
-	// 	return err
-	// }
-	// log.Print(inserted)
-
-	// fetched, err := queries.GetProperty(ctx, inserted.ID)
-	// if err != nil {
-	// 	return err
-	// }
-	// log.Println(reflect.DeepEqual(inserted, fetched))
+	repo = webbyDb.New(sqlDb)
 	return nil
 }
 
 func main() {
-	if err := run(); err != nil {
+	if err := setupDb(); err != nil {
 		log.Fatal(err)
 	}
 
 	r := chi.NewRouter()
+	r.Use(middleware.Logger)
 
-	definemiscellaneousRoutes(r)
+	r.Handle("/static/*", http.FileServer(http.FS(static)))
 	defineAppRoutes(r)
 
 	log.Println("listening on :4000")
@@ -71,16 +54,58 @@ func main() {
 func defineAppRoutes(r *chi.Mux) {
 	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
 
-		t.ExecuteTemplate(w, "index.html.tmpl", [0]string{})
-	})
+		properties, err := repo.ListProperties(r.Context())
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
 
-}
-
-func definemiscellaneousRoutes(r *chi.Mux) {
-	r.Use(middleware.Logger)
-	fs := http.FileServer(http.FS(static))
-	r.Get("/favicon.ico", func(w http.ResponseWriter, r *http.Request) {
-		http.ServeFile(w, r, "static/favicon.ico")
+		t.ExecuteTemplate(w, "index.html.tmpl", properties)
 	})
-	r.Handle("/static/*", fs)
+	r.Get("/properties", func(w http.ResponseWriter, r *http.Request) {
+
+		properties, err := repo.ListProperties(r.Context())
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+
+		t.ExecuteTemplate(w, "_fragment.properties.html.tmpl", properties)
+	})
+	r.Post("/", func(w http.ResponseWriter, r *http.Request) {
+
+		if err := r.ParseForm(); err != nil {
+			w.WriteHeader(500)
+			return
+		}
+		property := r.PostForm
+		name := property.Get("name")
+		if name == "" {
+			t.ExecuteTemplate(w, "error.html.tmpl", "Name can't be blank")
+			return
+		}
+		if _, err := repo.CreateProperty(r.Context(), name); err != nil {
+			w.WriteHeader(500)
+			return
+		}
+		w.Header().Set("HX-Trigger", "newProperty")
+		w.WriteHeader(204)
+	})
+	r.Delete("/property/{id}", func(w http.ResponseWriter, r *http.Request) {
+		id, err := strconv.ParseInt(chi.URLParam(r, "id"), 10, 32)
+		if err != nil {
+			w.WriteHeader(500)
+			return
+		}
+		err = repo.DeleteProperty(r.Context(), int32(id))
+		if err != nil {
+			w.WriteHeader(500)
+			return
+		}
+		if err != nil {
+			w.WriteHeader(500)
+			return
+		}
+		w.WriteHeader(200)
+	})
 }

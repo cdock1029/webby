@@ -1,0 +1,8 @@
+{{ template "layout.html.tmpl" . }}
+{{ define "title" }}Error{{ end }}
+{{ define "content" }}
+  <div>
+    <h1>Error:</h1>
+    <pre>{{ . }}</pre>
+  </div>
+{{ end }}

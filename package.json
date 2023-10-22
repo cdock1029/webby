@@ -1,0 +1,8 @@
+{
+  "name": "webby",
+  "version": "1.0.0",
+  "dependencies": {
+    "prettier": "^3.0.3",
+    "prettier-plugin-go-template": "^0.0.15"
+  }
+}

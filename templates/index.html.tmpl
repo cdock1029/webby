@@ -1,24 +1,19 @@
-<!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link rel="stylesheet" href="/static/app.css" type="text/css" />
-  </head>
-  <body>
-    <h1 class="text-red-500">Todo List</h1>
-    <ul>
-      {{range .}}
-      <li>
-        <div>
-          {{.Title}}
-        </div>
-        <div>{{.Note}}</div>
-      </li>
-      <hr />
-      {{
-        end
-      }}
-    </ul>
-  </body>
-</html>
+{{ template "_layout.html.tmpl" . }}
+{{ define "title" }}Home{{ end }}
+{{ define "content" }}
+  <form hx-post="/" class="mb-4">
+    <fieldset>
+      <label>
+        New Property:
+        <input
+          id="property-name"
+          type="text"
+          name="name"
+          placeholder="Property name"
+        />
+      </label>
+      <button>Save</button>
+    </fieldset>
+  </form>
+  {{ template "_fragment.properties.html.tmpl" . }}
+{{ end }}
