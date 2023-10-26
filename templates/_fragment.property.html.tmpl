@@ -1,0 +1,26 @@
+<section class="flex items-center justify-between property">
+  <template
+    hx-get="/property/{{ .ID }}"
+    hx-trigger="propertyUpdated{{ .ID }} from:body"
+    hx-target="closest #property{{ .ID }}"
+    hx-swap="innerHTML"
+  ></template>
+  <template
+    hx-trigger="propertyDeleted{{ .ID }} from:body"
+    hx-on::trigger="this.closest('#property{{ .ID }}').remove()"
+  >
+  </template>
+  <span>{{ .Name }}</span>
+  <div class="flex space-x-4">
+    <button
+      hx-get="/property/{{ .ID }}?edit=1"
+      hx-target="closest #property{{ .ID }}"
+      hx-swap="innerHTML"
+    >
+      Edit
+    </button>
+    <button hx-delete="/property/{{ .ID }}" hx-confirm="Do you want to delete?">
+      X
+    </button>
+  </div>
+</section>

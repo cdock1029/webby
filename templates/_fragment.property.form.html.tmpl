@@ -1,0 +1,23 @@
+<form hx-post="/" hx-swap="outerHTML" class="flex items-center mb-4 space-x-4">
+  <fieldset>
+    <label>
+      New Property:
+      <input
+        id="property-name"
+        type="text"
+        name="name"
+        required
+        placeholder="Property name"
+      />
+    </label>
+    <button>Save</button>
+  </fieldset>
+  {{ if .Error }}
+    <span
+      hx-trigger="click"
+      hx-on::trigger="this.remove()"
+      class="text-sm italic font-semibold text-red-500 underline cursor-pointer"
+      >{{ .Error }}</span
+    >
+  {{ end }}
+</form>

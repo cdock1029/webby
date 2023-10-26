@@ -1,19 +1,6 @@
 {{ template "_layout.html.tmpl" . }}
 {{ define "title" }}Home{{ end }}
 {{ define "content" }}
-  <form hx-post="/" class="mb-4">
-    <fieldset>
-      <label>
-        New Property:
-        <input
-          id="property-name"
-          type="text"
-          name="name"
-          placeholder="Property name"
-        />
-      </label>
-      <button>Save</button>
-    </fieldset>
-  </form>
+  {{ template "_fragment.property.form.html.tmpl" . }}
   {{ template "_fragment.properties.html.tmpl" . }}
 {{ end }}

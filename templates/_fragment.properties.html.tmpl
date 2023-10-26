@@ -6,22 +6,21 @@
   _="on htmx:afterRequest set #property-name's value to ''"
   class="p-4 border border-indigo-400 border-solid rounded"
 >
-  <h1>Properties</h1>
-  <ol
-    hx-confirm="Do you want to delete?"
-    hx-target="closest li"
-    hx-swap="outerHTML swap:250ms"
-    class="space-y-4"
-  >
-    {{ range . }}
-      <li>
-        <div class="flex items-center justify-between">
-          <span>{{ .Name }}</span>
-          <div class="flex space-x-4">
-            <button>Edit</button>
-            <button hx-delete="/property/{{ .ID }}">X</button>
-          </div>
-        </div>
+  <h1>Properties 1</h1>
+  <ol class="space-y-4">
+    {{ range .Properties }}
+      <li id="property{{ .ID }}">
+        {{ template "_fragment.property.html.tmpl" . }}
+      </li>
+    {{ end }}
+  </ol>
+
+  <hr />
+  <h1>Properties 2</h1>
+  <ol class="space-y-4">
+    {{ range .Properties }}
+      <li id="property{{ .ID }}">
+        {{ template "_fragment.property.html.tmpl" . }}
       </li>
     {{ end }}
   </ol>

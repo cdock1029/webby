@@ -1,0 +1,19 @@
+<form hx-put="/property/{{ .ID }}" class="flex space-x-4">
+  <input
+    type="text"
+    name="name"
+    required
+    value="{{ .Name }}"
+    autofocus
+    autocomplete="off"
+  />
+  <button
+    type="button"
+    hx-get="/property/{{ .ID }}"
+    hx-target="closest #property{{ .ID }}"
+    hx-swap="innerHTML"
+  >
+    Cancel
+  </button>
+  <button>Submit</button>
+</form>
